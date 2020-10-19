@@ -74,16 +74,25 @@ class Registration(commands.Cog):
         self.bot.logger.info(f"Added user /u/{username} to verification queue")
 
     @commands.command()
-    async def modqueue(self, ctx, channel: discord.TextChannel = None):
+    async def modqueue(self, ctx, subreddit: str = "", channel: discord.TextChannel = None):
         self.bot.logger.info(f"Changing modqueue channel for {ctx.guild.name} {ctx.guild.id}")
         channel = channel or ctx.channel
-        subreddit = None
+        subs_in_guild = 0
+        subs = str()
+        # todo: multi-page subreddit choice for multi-sub guilds?
         for item in self.bot.channel_config.keys():
-            if self.bot.channel_config[item]['guild'] == ctx.guild.id:
-                subreddit = item
-        if subreddit is None:
+            if self.bot.channel_config[item]["guild"] == ctx.guild.id:
+                if item == subreddit.lower():
+                    subs_in_guild = 1
+                    break
+                subs_in_guild += 1
+                subs += "/r/" + item + "\n"
+        if subs_in_guild == 0:
             await ctx.send("Your subreddit has not been verified yet! Fix that by using the `r!register` command!")
             self.bot.logger.info("Verification failed: no subreddit provided")
+            return
+        if subs_in_guild > 1:
+            await ctx.send(f"Please specify one of:\n```\n{subs}\n```")
             return
         self.bot.logger.info(f"Subreddit /r/{subreddit}")
         username = None

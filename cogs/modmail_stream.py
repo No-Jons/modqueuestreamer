@@ -13,8 +13,8 @@ class ModmailStreamHandler(commands.Cog):
     def modmail(self):
         for obj in self.bot.reddit.subreddit("mod").mod.stream.modmail_conversations(skip_existing=True):
             embed = format_modmail_msg(obj)
-            if str(obj.owner) in self.bot.channel_config:
-                channel = self.bot.get_channel(int(self.bot.channel_config[str(obj.owner)]['modmail']))
+            if str(obj.owner).lower() in self.bot.channel_config:
+                channel = self.bot.get_channel(int(self.bot.channel_config[str(obj.owner).lower()]['modmail']))
                 self.bot.event_queue.append({"embed" : embed, "channel" : channel})
                 # todo: cache
             else:

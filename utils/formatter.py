@@ -5,12 +5,16 @@ from datetime import datetime
 
 
 def format_msg(obj, obj_from):
-    header = f"{obj_from} item {obj}"
     if isinstance(obj, praw.reddit.models.Submission):
         obj_type = "Submission"
+        url = obj.url
     else:  # type can be inferred to be a comment
         obj_type = "Comment"
-    embed = discord.Embed(title=header, description=obj_type, url=obj.url, color=discord.Color.orange())
+        url = f"https://www.reddit.com/{obj.permalink}"
+    embed = discord.Embed(title=f"{obj_from} item {obj}",
+                          description=obj_type,
+                          url=url,
+                          color=discord.Color.orange())
     author_name = str(obj.author) if obj.author else "[deleted]"
     embed.add_field(name="Author", value=f"[u/{author_name}](https://www.reddit.com/user/{author_name})")
     if obj.user_reports:
