@@ -18,8 +18,7 @@ class Admin(commands.Cog):
     async def queuedata(self, ctx):
         await ctx.send(
             f"```\nObjects in queue: {len(self.bot.event_queue)}\n"
-            f"Total objects streamed: {self.bot.streamed_counter}\n"
-            f"Memory allocated: {self.bot.event_queue.__sizeof__()} KB\n```"
+            f"Total objects streamed: {self.bot.streamed_counter}\n```"
         )
 
     @commands.command()
