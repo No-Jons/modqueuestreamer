@@ -39,7 +39,7 @@ def setup():
 
     bot.logger.info('Successfully loaded json data files')
 
-    for ext in ['cogs.modqueue_stream', 'cogs.registration', 'cogs.inbox_stream', 'cogs.modmail_stream', 'cogs.info',
+    for ext in ['cogs.modqueue_stream', 'cogs.registration', 'cogs.inbox_stream', 'cogs.modmail_stream',
                 'cogs.object_stream', 'cogs.admin']:
         bot.load_extension(ext)
 
