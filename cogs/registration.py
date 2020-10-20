@@ -3,11 +3,13 @@ import praw
 
 from discord.ext import commands
 from utils.etc import create_code
+from utils.checks import Checks
 
 
 class Registration(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.checks = Checks(self.bot)
 
     @commands.command(aliases=['verify', 'verify_sr'])
     async def register(self, ctx, subreddit: str, username: str = None,
@@ -17,31 +19,16 @@ class Registration(commands.Cog):
         modqueue_channel = modqueue_channel or ctx.channel
         modmail_channel = modmail_channel or modqueue_channel
         if username is None:
-            for i in self.bot.verified_users.keys():
-                if i == str(ctx.author.id):
-                    username = self.bot.verified_users[i]
-            if username is None:
-                await ctx.send("You are not a verified user yet! Fix that by using the `r!verify_me` command!")
-                self.bot.logger.info("Verification failed: unverified user")
-                return
-        try:
-            to_msg = self.bot.reddit.redditor(username)
-        except praw.reddit.RedditAPIException as e:
-            await ctx.send(f"No user found with username /u/{username}")
-            self.bot.logger.info(f"Verification failed, invalid user: {e}")
-            return
-        if subreddit.lower() not in [i.display_name.lower() for i in to_msg.moderated()]:
-            await ctx.send("You can't register this bot on a subreddit that you don't mod!")
-            self.bot.logger.info("Verification failed: invalid user")
-            return
-        if subreddit.lower() in self.bot.channel_config:
-            await ctx.send("Your subreddit is already verified!")
+            username = await self.checks.get_username(ctx)
+        to_msg = await self.checks.get_redditor(ctx, username)
+        if not await self.checks.user_is_mod(ctx, to_msg, subreddit) \
+                or await self.checks.subreddit_is_verified(ctx, subreddit):
             return
         verification_code = create_code()
         to_msg.message(subject=f"Verification for /r/{subreddit} setup",
                        message=f"Hello! "
-                       f"If you did not expect to receive this message, please ignore it. "
-                       f"Your verification code is {verification_code}."
+                       f"If you did not expect to receive this message, please ignore it.\n"
+                       f"Your verification code is {verification_code}.\n"
                        f"\n^Requested ^by ^{ctx.author.name}#{ctx.author.discriminator} ^{ctx.author.id}")
         await ctx.send(f"Sent a PM to /u/{username}, reply to the message to verify /r/{subreddit}")
         self.bot.verification_queue[username] = {'subreddit' : subreddit, 'channel' : ctx.channel,
@@ -53,21 +40,14 @@ class Registration(commands.Cog):
     @commands.command(aliases=['verify_me'])
     async def register_me(self, ctx, username: str):
         self.bot.logger.info(f"Starting verification for /u/{username}")
-        try:
-            to_msg = self.bot.reddit.redditor(username)
-        except praw.reddit.RedditAPIException as e:
-            await ctx.send(f"No user found with username /u/{username}")
-            self.bot.logger.info(f"Verification failed, invalid user: {e}")
+        if await self.checks.user_is_verified(ctx, username):
             return
-        if username.lower() in self.bot.verified_users.values():
-            await ctx.send(f"You're already verified as /u/{username}")
-            self.bot.logger.info("Verification failed: user already verified")
-            return
+        to_msg = await self.checks.get_redditor(ctx, username)
         verification_code = create_code()
         to_msg.message(subject=f"Verification for /u/{username}",
                        message=f"Hello! "
-                       f"If you did not expect to receive this message, please ignore it. "
-                       f"Your verification code is {verification_code}."
+                       f"If you did not expect to receive this message, please ignore it.\n"
+                       f"Your verification code is {verification_code}.\n"
                        f"\n^Requested ^by ^{ctx.author.name}#{ctx.author.discriminator} ^{ctx.author.id}")
         self.bot.verification_queue[username] = {'username' : username, 'author' : ctx.author,
                                                  "code" : verification_code}
@@ -77,47 +57,14 @@ class Registration(commands.Cog):
     async def modqueue(self, ctx, subreddit: str = "", channel: discord.TextChannel = None):
         self.bot.logger.info(f"Changing modqueue channel for {ctx.guild.name} {ctx.guild.id}")
         channel = channel or ctx.channel
-        subs_in_guild = 0
-        subs = str()
-        # todo: multi-page subreddit choice for multi-sub guilds?
-        for item in self.bot.channel_config.keys():
-            if self.bot.channel_config[item]["guild"] == ctx.guild.id:
-                if item == subreddit.lower():
-                    subs_in_guild = 1
-                    break
-                subs_in_guild += 1
-                subs += "/r/" + item + "\n"
-        if subs_in_guild == 0:
-            await ctx.send("Your subreddit has not been verified yet! Fix that by using the `r!register` command!")
-            self.bot.logger.info("Verification failed: no subreddit provided")
-            return
-        if subs_in_guild > 1:
-            await ctx.send(f"Please specify one of:\n```\n{subs}\n```")
+        subreddit = await self.checks.get_subreddit(ctx, subreddit)
+        username = await self.checks.get_username(ctx)
+        if (subreddit or username) is None:
             return
         self.bot.logger.info(f"Subreddit /r/{subreddit}")
-        username = None
-        for i in self.bot.verified_users.keys():
-            if i == str(ctx.author.id):
-                username = self.bot.verified_users[i]
-        if username is None:
-            await ctx.send("You are not a verified user yet! Fix that by using the `r!register_me` command!")
-            self.bot.logger.info("Verification failed: unverified user")
-            return
         self.bot.logger.info(f"Requester /u/{username}")
-        try:
-            redditor = self.bot.reddit.redditor(username)
-        except praw.reddit.RedditAPIException as e:
-            await ctx.send(f"No user found with username /u/{username}")
-            self.bot.logger.info(f"Verification failed, invalid user: {e}")
-            return
-        try:
-            if subreddit.lower() not in [i.display_name.lower() for i in redditor.moderated()]:
-                await ctx.send("You can't register this bot on a subreddit that you don't mod!")
-                self.bot.logger.info("Verification failed: invalid user")
-                return
-        except praw.reddit.RedditAPIException as e:
-            await ctx.send(f"Encountered error when verifying, are you sure /u/{username} exists?")
-            self.bot.logger.info(f"Verification failed: invalid user: {e}")
+        redditor = self.bot.reddit.redditor(username)
+        if not await self.checks.user_is_mod(ctx, redditor, subreddit):
             return
         await ctx.send("Changing modqueue channel...")
         self.bot.channel_config[subreddit]['modqueue'] = channel.id
@@ -127,47 +74,12 @@ class Registration(commands.Cog):
     async def modmail(self, ctx, subreddit: str = "", channel: discord.TextChannel = None):
         self.bot.logger.info(f"Changing modmail channel for {ctx.guild.name} {ctx.guild.id}")
         channel = channel or ctx.channel
-        subs_in_guild = 0
-        subs = str()
-        # todo: multi-page subreddit choice for multi-sub guilds?
-        for item in self.bot.channel_config.keys():
-            if self.bot.channel_config[item]["guild"] == ctx.guild.id:
-                if item == subreddit.lower():
-                    subs_in_guild = 1
-                    break
-                subs_in_guild += 1
-                subs += "/r/" + item + "\n"
-        if subs_in_guild == 0:
-            await ctx.send("Your subreddit has not been verified yet! Fix that by using the `r!register` command!")
-            self.bot.logger.info("Verification failed: no subreddit provided")
-            return
-        if subs_in_guild > 1:
-            await ctx.send(f"Please specify one of:\n```\n{subs}\n```")
-            return
+        subreddit = await self.checks.get_subreddit(ctx, subreddit)
+        username = await self.checks.get_username(ctx)
         self.bot.logger.info(f"Subreddit /r/{subreddit}")
-        username = None
-        for i in self.bot.verified_users.keys():
-            if i == str(ctx.author.id):
-                username = self.bot.verified_users[i]
-        if username is None:
-            await ctx.send("You are not a verified user yet! Fix that by using the `r!register_me` command!")
-            self.bot.logger.info("Verification failed: unverified user")
-            return
         self.bot.logger.info(f"Requester /u/{username}")
-        try:
-            redditor = self.bot.reddit.redditor(username)
-        except praw.reddit.RedditAPIException as e:
-            await ctx.send(f"No user found with username /u/{username}")
-            self.bot.logger.info(f"Verification failed, invalid user: {e}")
-            return
-        try:
-            if subreddit.lower() not in [i.display_name.lower() for i in redditor.moderated()]:
-                await ctx.send("You can't register this bot on a subreddit that you don't mod!")
-                self.bot.logger.info("Verification failed: invalid user")
-                return
-        except praw.reddit.RedditAPIException:
-            await ctx.send(f"Encountered error when verifying, are you sure /u/{username} exists?")
-            self.bot.logger.info("Verification failed: invalid user")
+        redditor = self.bot.reddit.redditor(username)
+        if not await self.checks.user_is_mod(ctx, redditor, subreddit):
             return
         await ctx.send("Changing modmail channel...")
         self.bot.channel_config[subreddit]['modmail'] = channel.id
