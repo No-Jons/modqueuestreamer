@@ -10,23 +10,30 @@ from utils.logger import set_logger
 bot = commands.Bot(command_prefix="r!", intents=discord.Intents.default())  # update custom bot class for this
 
 
-def setup():
-    bot.logger = set_logger()
-    bot.logger.info("Called `setup` method")
-
-    bot.reddit = praw.Reddit(
+def create_reddit_connection():
+    if hasattr(bot, 'reddit'):
+        del bot.reddit
+    reddit = praw.Reddit(
         client_id=Auth.REDDIT_CLIENT_ID,
         client_secret=Auth.REDDIT_CLIENT_SECRET,
-        user_agent="modqueue stream bot, u/kirby_stomp",
+        user_agent="modqueue streaming bot v0.3, /u/Kirby_Stomp",
         username="modqueuestreamer",
         password=Auth.REDDIT_PASSWORD
     )
     bot.logger.info("Succesfully logged into reddit as `u/modqueuestreamer`")
+    return reddit
+
+
+def setup():
+    bot.logger = set_logger()
+    bot.logger.info("Called `setup` method")
+    bot.reddit = create_reddit_connection()
 
     bot.cached_items = set()
     bot.verification_queue = dict()
     bot.event_queue = list()
     bot.dump_data = dump_data
+    bot.create_reddit_connection = create_reddit_connection
     bot.default_invite = \
         "https://discord.com/api/oauth2/authorize?client_id=767842408758771742&permissions=51200&scope=bot"
     bot.streamed_counter = 0

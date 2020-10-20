@@ -27,6 +27,21 @@ class Admin(commands.Cog):
         self.bot.dump_data()
         await ctx.send("Finished dumping bot data")
 
+    @commands.command()
+    @commands.is_owner()
+    async def prawconnection(self, ctx):
+        try:
+            redditor = self.bot.reddit.redditor('modqueuestreamer')
+            await ctx.send("Connection is still open!")
+        except:
+            await ctx.send("Connection has been closed, please reload connection.")
+
+    @commands.command()
+    @commands.is_owner()
+    async def forcenewconnection(self, ctx):
+        self.bot.reddit = self.bot.create_reddit_connection()
+        await ctx.send("Connection created")
+
 
 def setup(bot):
     bot.add_cog(Admin(bot))
