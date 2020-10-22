@@ -22,7 +22,8 @@ class Cache(Queue):
         embed = format_msg(updated_obj, approved=updated_obj.approved, removed=updated_obj.removed)
         await message.edit(embed=embed)
         obj = self._items.pop(0)
-        self.add(obj)
+        if not (updated_obj.approved or updated_obj.removed):
+            self.add(obj)
         self._items_updated += 1
 
     def purge(self, limit: int = 100):
