@@ -6,6 +6,8 @@ import atexit
 from discord.ext import commands
 from utils.auth import Auth
 from utils.logger import set_logger
+from utils.cache import Cache
+from utils.queue import Queue
 
 bot = commands.Bot(command_prefix="r!", intents=discord.Intents.default())  # update custom bot class for this
 
@@ -20,6 +22,7 @@ def create_reddit_connection():
         username="modqueuestreamer",
         password=Auth.REDDIT_PASSWORD
     )
+    bot.obj_cache.update_reddit(reddit)
     bot.logger.info("Succesfully logged into reddit as `u/modqueuestreamer`")
     return reddit
 
@@ -27,16 +30,17 @@ def create_reddit_connection():
 def setup():
     bot.logger = set_logger()
     bot.logger.info("Called `setup` method")
-    bot.reddit = create_reddit_connection()
 
     bot.cached_items = set()
     bot.verification_queue = dict()
-    bot.event_queue = list()
+    bot.event_queue = Queue()
+    bot.obj_cache = Cache()
     bot.dump_data = dump_data
     bot.create_reddit_connection = create_reddit_connection
     bot.default_invite = \
         "https://discord.com/api/oauth2/authorize?client_id=767842408758771742&permissions=51200&scope=bot"
-    bot.streamed_counter = 0
+
+    bot.reddit = create_reddit_connection()
 
     with open('./data/channel_config.json', 'r') as fp:
         bot.channel_config = json.load(fp)

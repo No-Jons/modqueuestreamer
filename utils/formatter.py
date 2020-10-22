@@ -4,17 +4,29 @@ import discord
 from datetime import datetime
 
 
-def format_msg(obj, obj_from):
+def format_msg(obj, approved=False, removed=False):
+    if approved:
+        color = discord.Color.green()
+        prefix = "Approved -"
+        footer_suffix = f"- Approved by /u/{obj.approved_by}"
+    elif removed:
+        color = discord.Color.red()
+        prefix = "Removed -"
+        footer_suffix = f"- Removed for {obj.removal_reason or 'no reason provided'}"
+    else:
+        color = discord.Color.orange()
+        prefix = ""
+        footer_suffix = ""
     if isinstance(obj, praw.reddit.models.Submission):
         obj_type = "Submission"
         url = obj.url
     else:  # type can be inferred to be a comment
         obj_type = "Comment"
         url = f"https://www.reddit.com/{obj.permalink}"
-    embed = discord.Embed(title=f"{obj_from} item {obj}",
+    embed = discord.Embed(title=f"{prefix} Modqueue item {obj}",
                           description=obj_type,
                           url=url,
-                          color=discord.Color.orange())
+                          color=color)
     author_name = str(obj.author) if obj.author else "[deleted]"
     embed.add_field(name="Author", value=f"[u/{author_name}](https://www.reddit.com/user/{author_name})")
     if obj.user_reports:
@@ -27,7 +39,7 @@ def format_msg(obj, obj_from):
         for i in obj.mod_reports:
             reports += f"{i[1]}: {i[0]}\n"
         embed.add_field(name="Mod Reports:", value=reports)
-    embed.set_footer(text=f"/r/{obj.subreddit} - {obj.fullname}")
+    embed.set_footer(text=f"/r/{obj.subreddit} - {obj.fullname} {footer_suffix}")
     embed.timestamp = datetime.fromtimestamp(obj.created_utc)
     return embed
 

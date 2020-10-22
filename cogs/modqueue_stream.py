@@ -12,13 +12,12 @@ class ModqueueStreamHandler(commands.Cog):
 
     def modqueue(self):
         for obj in self.bot.reddit.subreddit("mod").mod.stream.modqueue(skip_existing=True):
-            embed = format_msg(obj, "Modqueue")
+            embed = format_msg(obj)
             if obj.subreddit.display_name.lower() in self.bot.channel_config:
                 channel = self.bot.get_channel(
                     int(self.bot.channel_config[obj.subreddit.display_name.lower()]['modqueue'])
                 )
-                self.bot.event_queue.append({"embed" : embed, "channel" : channel})
-                # todo: cache?
+                self.bot.event_queue.add({"embed" : embed, "channel" : channel, "obj" : obj})
             else:
                 self.bot.logger.info(f"Subreddit {obj.subreddit} has not set logging channel, skipped log")
 

@@ -15,8 +15,7 @@ class ModmailStreamHandler(commands.Cog):
             embed = format_modmail_msg(obj)
             if str(obj.owner).lower() in self.bot.channel_config:
                 channel = self.bot.get_channel(int(self.bot.channel_config[str(obj.owner).lower()]['modmail']))
-                self.bot.event_queue.append({"embed" : embed, "channel" : channel})
-                # todo: cache
+                self.bot.event_queue.add({"embed" : embed, "channel" : channel})
             else:
                 self.bot.logger.info(f"Subreddit {obj.owner} has not set logging channel, skipped log")
 
