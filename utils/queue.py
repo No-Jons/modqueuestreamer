@@ -1,21 +1,17 @@
 class Queue:
     def __init__(self, limit: int = 1000):
-        self._items = list()
-        self._limit = limit
+        self.queue = list()
+        self.limit = limit
         self.total = 0
 
-    @property
-    def queue(self):
-        return self._items
-
     def __len__(self):
-        return len(self._items)
+        return len(self.queue)
 
     def add(self, item):
-        self._items.append(item)
+        self.queue.append(item)
         self.total += 1
-        if len(self._items) > self._limit:
-            self.remove(self._items[-1])
+        if len(self.queue) > self.limit:
+            self.remove(self.queue[-1])
 
     def remove(self, item):
-        self._items.remove(item)
+        self.queue.remove(item)

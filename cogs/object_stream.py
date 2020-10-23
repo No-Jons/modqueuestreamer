@@ -30,9 +30,9 @@ class ObjStream(commands.Cog):
                 self.bot.logger.error("Invalid permissions, not able to send messages...")
         self.bot.logger.debug("Executed task read_queue")
 
-    @tasks.loop(minutes=30.0)
+    @tasks.loop(minutes=10.0)
     async def update_cache(self):
-        for obj in self.bot.obj_cache.cache:
+        for obj in self.bot.obj_cache.queue:
             try:
                 await self.bot.obj_cache.update(obj["obj"], obj["message"])
             except discord.HTTPException:
