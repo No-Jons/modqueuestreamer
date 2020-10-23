@@ -2,6 +2,7 @@ import discord
 
 from discord.ext import commands, tasks
 from utils.self_deleting_message import SelfDeletingMessage
+from utils.moderation import Moderation
 from utils.checks import Checks
 
 
@@ -10,6 +11,8 @@ class ObjStream(commands.Cog):
         self.bot = bot
         self.approve = "<:approve:769073700465016872>"
         self.remove = "<:remove:769073700452171776>"
+        self.ignore_reports = "🔇"
+        self.mod = Moderation(self.bot)
         self.checks = Checks(self.bot)
 
     @commands.Cog.listener()
@@ -30,6 +33,7 @@ class ObjStream(commands.Cog):
                 message = await obj["channel"].send(embed=obj["embed"])
                 await message.add_reaction(self.approve)
                 await message.add_reaction(self.remove)
+                await message.add_reaction(self.ignore_reports)
                 self.bot.event_queue.remove(obj)
                 self.bot.obj_cache.add({"obj" : obj["obj"], "message" : message})
             except discord.Forbidden:
@@ -55,22 +59,19 @@ class ObjStream(commands.Cog):
                 obj = item["obj"]
                 break
         else:
-            self.bot.logger.info("Cannot perform action on message item, not found in cache")
             return
         redditor_invoked = self.bot.reddit.redditor(self.bot.verified_users[str(payload.user_id)])
         if not self.checks.user_is_mod_silent(redditor_invoked, obj.subreddit.display_name):
             return
-        if str(payload.emoji) == self.approve:
-            obj.mod.approve()
-            await SelfDeletingMessage(self.bot, content=f"Modqueue item {obj.id} approved!").send_and_delete_after(channel)
-            self.bot.logger.info(f"Approved post {obj.id}")
+        if str(payload.emoji) == self.ignore_reports:
+            await self.mod.ignore_reports(obj, channel)
+            return
+        elif str(payload.emoji) == self.approve:
+            await self.mod.approve(obj, channel)
             return
         elif str(payload.emoji) == self.remove:
-            removal_reasons = obj.subreddit.mod.removal_reasons
-            try:
-                removal_reasons[0]
-            except IndexError:
-                removal_reasons = None
+            selection = None
+            removal_reasons = self.mod.get_removal_reasons(obj.subreddit)
             if removal_reasons is not None:  # If there are any removal reasons
                 embed = discord.Embed(title="Removal reasons:", color=discord.Color.red())
                 idx = 1
@@ -87,34 +88,11 @@ class ObjStream(commands.Cog):
                                                       exceptions=["none", "cancel"]).send_and_wait_for_message(
                     channel, reaction_user
                 )
-                if selection.lower() == 'cancel':
-                    return
-                elif selection.lower() == 'none':
-                    obj.mod.remove()
-                    await SelfDeletingMessage(self.bot, content=f"Modqueue item {obj.id} removed!"
-                                              ).send_and_delete_after(channel)
-                    self.bot.logger.info(f"Removed item {obj.id}")
-                    return
-                removal_reason = removal_reasons[selection - 1]
-            else:
-                obj.mod.remove()
-                await SelfDeletingMessage(self.bot, content=f"Modqueue item {obj.id} removed!").send_and_delete_after(
-                    channel)
-                self.bot.logger.info(f"Removed item {obj.id}")
+            if str(selection).lower() == "none":
+                await self.mod.remove(obj, channel)
                 return
-            obj.mod.remove(reason_id=removal_reason.id)
-            if removal_reasons and removal_reason.message:
-                obj.mod.send_removal_message(
-                    type='public',
-                    message=f"Hello, /u/{obj.author}!\n"
-                            f"Unfortunately, your post has been removed for the following reason(s):\n"
-                            f"##**{removal_reason.title}**:\n"
-                            f"{removal_reason.message}\n\n"
-                            f"If you feel this removal was in error, feel free to "
-                            f"[contact the mods](https://www.reddit.com/message/compose/?to=%2Fr%2F{obj.subreddit})."
-                )
-            await SelfDeletingMessage(self.bot, content=f"Modqueue item {obj.id} removed!").send_and_delete_after(channel)
-            self.bot.logger.info(f"Removed item {obj.id}")
+            removal_reason = removal_reasons[selection - 1]
+            await self.mod.remove(obj, channel, removal_reason)
             return
 
     @tasks.loop(minutes=30.0)
