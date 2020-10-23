@@ -14,7 +14,6 @@ class ModqueueStreamer(commands.Bot):
     def __init__(self, command_prefix: str, intents: discord.Intents, **kwargs):
         super().__init__(command_prefix=command_prefix, intents=intents, **kwargs)
         self.logger = set_logger()
-        self.cached_items = set()
         self.verification_queue = dict()
         self.event_queue = Queue()
         self.obj_cache = Cache()
