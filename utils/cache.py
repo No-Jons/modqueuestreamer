@@ -20,6 +20,8 @@ class Cache(Queue):
         obj = self.queue.pop(0)
         if not (updated_obj.approved or updated_obj.removed):
             self.add(obj)
+        else:
+            await message.clear_reactions()
         self.items_updated += 1
 
     def purge(self, limit: int = 100):

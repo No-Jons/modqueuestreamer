@@ -9,7 +9,8 @@ from utils.logger import set_logger
 from utils.cache import Cache
 from utils.queue import Queue
 
-bot = commands.Bot(command_prefix="r!", intents=discord.Intents.default())  # update custom bot class for this
+bot = commands.Bot(command_prefix="r!", intents=discord.Intents(
+    messages=True, members=True, guilds=True, reactions=True))  # update custom bot class for this
 
 
 def create_reddit_connection():
@@ -70,7 +71,11 @@ def dump_data():
     bot.logger.info("Dumping bot data")
     with open('./data/channel_config.json', 'w') as fp:
         json.dump(bot.channel_config, fp)
+    with open('./data/backups/channel_config.json', 'w') as fp:
+        json.dump(bot.channel_config, fp)
     with open('./data/verified_users.json', 'w') as fp:
+        json.dump(bot.verified_users, fp)
+    with open('./data/backups/verified_users.json', 'w') as fp:
         json.dump(bot.verified_users, fp)
     bot.logger.info("Finished dumping bot data")
 

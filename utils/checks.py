@@ -1,6 +1,8 @@
 import discord
 import praw
 
+from utils.self_deleting_message import SelfDeletingMessage
+
 
 class Checks:
     def __init__(self, bot):
@@ -27,13 +29,9 @@ class Checks:
                 embed = discord.Embed(title="Choose a subreddit to edit the config of:", color=discord.Color.green())
                 for i in range(len(subs)):
                     embed.add_field(name=f"{self._emojis[i]}.", value=f"/r/{subs[i]}")
-                message = await ctx.send(embed=embed)
-                for i in range(len(subs)):
-                    await message.add_reaction(self._emojis[i])
-                r, u = await self.bot.wait_for('reaction_add',
-                                               check= lambda r, u: r.emoji in self._emojis and u.id == ctx.author.id)
-                await message.delete()
-                list_index = self._emojis.index(r.emoji)
+                emoji = await SelfDeletingMessage(self.bot, embed=embed,
+                                                  emojis=self._emojis).send_and_wait_for_reaction(ctx.channel)
+                list_index = self._emojis.index(emoji)
                 return subs[list_index]
         else:
             return subreddit
@@ -52,6 +50,11 @@ class Checks:
         if subreddit.lower() not in [i.display_name.lower() for i in redditor.moderated()]:
             await ctx.send("You can't register this bot on a subreddit that you don't mod!")
             self.bot.logger.info("Verification failed: invalid user")
+            return False
+        return True
+
+    def user_is_mod_silent(self, redditor, subreddit):
+        if subreddit.lower() not in [i.display_name.lower() for i in redditor.moderated()]:
             return False
         return True
 
