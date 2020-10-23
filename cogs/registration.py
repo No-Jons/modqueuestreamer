@@ -109,6 +109,7 @@ class Registration(commands.Cog):
                     verified = True
                     break
         if verified:
+            await message.delete()
             del self.bot.verification_queue[username.lower()]
             await message.channel.send(f"Your verification request has been confirmed and accepted!")
 
