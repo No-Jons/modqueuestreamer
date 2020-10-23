@@ -45,14 +45,12 @@ class ModqueueStreamer(commands.Bot):
 
     def dump_data(self):
         self.logger.info("Dumping bot data")
-        with open('./data/channel_config.json', 'w') as fp:
+        with open('./data/channel_config.json', 'w') as fp, open('./data/backups/channel_config.json', 'w') as fp2:
             json.dump(self.channel_config, fp)
-        with open('./data/backups/channel_config.json', 'w') as fp:
-            json.dump(self.channel_config, fp)
-        with open('./data/verified_users.json', 'w') as fp:
+            json.dump(self.channel_config, fp2)
+        with open('./data/verified_users.json', 'w') as fp, open('./data/backups/verified_users.json', 'w') as fp2:
             json.dump(self.verified_users, fp)
-        with open('./data/backups/verified_users.json', 'w') as fp:
-            json.dump(self.verified_users, fp)
+            json.dump(self.verified_users, fp2)
         self.logger.info("Finished dumping bot data")
 
     def load_data(self):
