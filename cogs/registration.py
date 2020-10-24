@@ -32,9 +32,9 @@ class Registration(commands.Cog):
                        f"\n^Requested ^by ^{ctx.author.name}#{ctx.author.discriminator} ^{ctx.author.id}")
         await ctx.send(f"Sent a PM to /u/{username}, send the verification code (the six numbers sent by the bot) "
                        f"to *this channel* to verify /r/{subreddit}")
-        self.bot.verification_queue[username] = {'subreddit' : subreddit, 'channel' : ctx.channel,
-                                                 'modqueue' : modqueue_channel, 'modmail' : modmail_channel,
-                                                 'username' : username, 'author' : ctx.author,
+        self.bot.verification_queue[username] = {"subreddit" : subreddit, "channel" : ctx.channel,
+                                                 "modqueue" : modqueue_channel, "modmail" : modmail_channel,
+                                                 "username" : username, "author" : ctx.author,
                                                  "code" : verification_code}
         self.bot.logger.info(f"Added user /u/{username} and subreddit /r/{subreddit} to verification queue")
 
@@ -52,7 +52,7 @@ class Registration(commands.Cog):
                        f"\n^Requested ^by ^{ctx.author.name}#{ctx.author.discriminator} ^{ctx.author.id}")
         await ctx.send(f"Sent a PM to /u/{username}, send the verification code (the six numbers sent by the bot) "
                        f"to *this channel* to verify your account.")
-        self.bot.verification_queue[username] = {'username' : username, 'author' : ctx.author,
+        self.bot.verification_queue[username] = {"username" : username, "author" : ctx.author,
                                                  "code" : verification_code}
         self.bot.logger.info(f"Added user /u/{username} to verification queue")
 

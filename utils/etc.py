@@ -7,7 +7,6 @@ def create_code():
 
 def is_int(to_test: str):
     try:
-        new = int(to_test)
-        return new
+        return int(to_test)
     except ValueError:
         return False

@@ -34,14 +34,14 @@ def format_msg(obj, approved=False, removed=False):
         if len(user_reports) >= 5:
             user_reports = obj.user_reports[:5]
         embed.add_field(name=f"User Reports ({len(obj.user_reports)}):",
-                        value="".join([f"{i[1]}: {i[0]}\n" if len(i[0]) <= 80 else f"{i[1]}: {i[0][:80]}..."
+                        value="".join([f"{i[1]}: {i[0]}\n" if len(i[0]) <= 40 else f"{i[1]}: {i[0][:40]}..."
                                        for i in user_reports]))
     if obj.mod_reports:
         mod_reports = obj.mod_reports
         if len(mod_reports) >= 5:
             mod_reports = obj.mod_reports[:5]
         embed.add_field(name=f"Mod Reports ({len(obj.mod_reports)}):",
-                        value="".join([f"{i[1]}: {i[0]}\n" if len(i[0]) <= 80 else f"{i[1]}: {i[0][:80]}..."
+                        value="".join([f"{i[1]}: {i[0]}\n" if len(i[0]) <= 40 else f"{i[1]}: {i[0][:40]}..."
                                        for i in mod_reports]))
     embed.set_footer(text=f"/r/{obj.subreddit} - {obj.fullname} {footer_suffix}")
     embed.timestamp = datetime.fromtimestamp(obj.created_utc)
