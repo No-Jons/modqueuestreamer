@@ -1,5 +1,5 @@
 # modqueuestreamer
-Reddit bot that streams modqueue and modmail items to discord
+Reddit bot that streams modqueue and modmail items to discord, and allows you to perform mod actions on them.
 
 ## How To Use
 1. Invite the bot as a mod on your subreddit
