@@ -2,7 +2,7 @@
 Reddit bot that streams modqueue and modmail items to discord, and allows you to perform mod actions on them.
 
 ## How To Use
-1. Invite the bot as a mod on your subreddit
+1. Invite the bot (/u/modqueuestreamer) as a mod on your subreddit
   
   https://www.reddit.com/r/YOURSUBREDDITHERE/about/moderators
 
