@@ -21,6 +21,11 @@ class InboxStreamHandler(commands.Cog):
                 try:
                     subreddit.mod.accept_invite()
                     self.bot.logger.info(f"Accepted invite to moderate {subreddit.display_name}")
+                    subreddit.message(subject="Discord invite",
+                                      message=f"Hello! Thanks for inviting me to your subreddit. Invite me to your "
+                                              f"discord server of choice [here]({self.bot.default_invite})! Make sure "
+                                              f"you have \"manage_server\" perms on the server you want to add me to. "
+                                              f"After you invite me, be sure to run the `r!register` command!")
                 except praw.reddit.RedditAPIException as e:
                     self.bot.logger.error(f"Failed to accept moderator invite to {subreddit.display_name}: "
                                           f"{e}")
