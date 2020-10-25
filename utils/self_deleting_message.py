@@ -35,15 +35,16 @@ class SelfDeletingMessage:
         message = await channel.send(content=self.content, embed=self.embed)
         try:
             m = await self.bot.wait_for('message',
-                                        check=lambda m: m.author.id == author.id and (is_int(m.content) <= self.limit or
-                                                                                      m.content.lower() in self.exceptions),
+                                        check=lambda m: m.author.id == author.id and (m.content.lower() in self.exceptions
+                                                                                      if not m.content.isdigit() else
+                                                                                      is_int(m.content) <= self.limit),
                                         timeout=self.timeout)
         except asyncio.TimeoutError:
             await message.delete()
             return
         await message.delete()
         await m.delete()
-        return is_int(m.content) or m.content
+        return m.content if not m.content.isdigit else int(m.content)
 
     async def send_and_delete_after(self, channel: discord.TextChannel, seconds: float = 10.0):
         message = await channel.send(content=self.content, embed=self.embed)
