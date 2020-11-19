@@ -2,9 +2,6 @@ import discord
 import asyncio
 
 
-from utils.etc import is_int
-
-
 class SelfDeletingMessage:
     def __init__(self, bot, content: str = "", embed: discord.Embed = None, emojis: list = None, limit: int = None,
                  exceptions: list = [], timeout: int = 60):

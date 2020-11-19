@@ -17,6 +17,7 @@ class ModqueueStreamer(commands.Bot):
         self.verification_queue = dict()
         self.event_queue = Queue()
         self.obj_cache = Cache()
+        self.running = True
         self.default_invite = \
             "https://discord.com/api/oauth2/authorize?client_id=767842408758771742&permissions=51200&scope=bot"
         self.reddit = self.create_reddit_connection()

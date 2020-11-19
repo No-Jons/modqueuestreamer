@@ -22,7 +22,6 @@ class ObjStream(commands.Cog):
             self.read_queue.start()
             self.update_cache.start()
             self.dump_bot_data.start()
-            self.refresh_reddit_connection.start()
         except RuntimeError:
             pass
 
@@ -98,10 +97,6 @@ class ObjStream(commands.Cog):
     @tasks.loop(minutes=30.0)
     async def dump_bot_data(self):
         self.bot.dump_data()
-
-    @tasks.loop(minutes=30.0)
-    async def refresh_reddit_connection(self):
-        self.bot.reddit = self.bot.create_reddit_connection()
 
 
 def setup(bot):
