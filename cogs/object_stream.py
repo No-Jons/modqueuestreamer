@@ -1,4 +1,5 @@
 import discord
+import praw
 
 from discord.ext import commands, tasks
 from utils.self_deleting_message import SelfDeletingMessage
@@ -71,7 +72,8 @@ class ObjStream(commands.Cog):
         elif str(payload.emoji) == self.remove:
             selection = None
             removal_reasons = self.mod.get_removal_reasons(obj.subreddit)
-            if removal_reasons is not None:  # If there are any removal reasons
+            if removal_reasons is not None and isinstance(obj, praw.reddit.models.Submission):
+                # If there are any removal reasons and is not a comment
                 embed = discord.Embed(title="Removal reasons:", color=discord.Color.red())
                 idx = 1
                 for i in removal_reasons:
